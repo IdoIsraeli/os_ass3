@@ -39,3 +39,4 @@ entry("uptime");
 entry("crypto_op");
 entry("take_shared_memory_request");
 entry("remove_shared_memory_request");
+entry("map_shared_memory");
