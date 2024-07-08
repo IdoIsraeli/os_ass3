@@ -121,3 +121,23 @@ uint64 sys_map_shared_pages(void)
 
   return dst_va;
 }
+
+uint64 sys_unmap_shared_pages(void)
+{
+  uint64 pid;
+  uint64 addr;
+  uint64 size;
+
+  argaddr(0, &pid);
+  argaddr(1, &addr);
+  argaddr(2, &size);
+
+  struct proc *proc = find_proc(pid);
+
+  if (proc == 0)
+  {
+    return -1;
+  }
+
+  return unmap_shared_pages(proc, addr, size);
+}
