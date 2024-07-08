@@ -714,7 +714,7 @@ uint64 map_shared_pages(struct proc *src_proc, struct proc *dst_proc, uint64 src
   uint64 dst_va = 0;
   pte_t *pte;
   uint64 mapped_bytes;
-  for (mapped_bytes = 0; mapped_bytes < PGROUNDUP(size); mapped_bytes += PGSIZE)
+  for (mapped_bytes = 0; mapped_bytes < size; mapped_bytes += PGSIZE)
   {
     // get the pte for the BEGINNING of each page of src_va
     pte = walk(src_proc->pagetable, src_va_page + mapped_bytes, 0);
@@ -749,25 +749,12 @@ uint64 map_shared_pages(struct proc *src_proc, struct proc *dst_proc, uint64 src
 uint64 unmap_shared_pages(struct proc *p, uint64 addr, uint64 size)
 {
   uint64 addr_page = PGROUNDDOWN(addr);
-  pte_t *pte;
-  int unmapped_bytes;
-  for (unmapped_bytes = 0; unmapped_bytes < PGROUNDUP(size); unmapped_bytes += PGSIZE)
-  {
-    pte = walk(p->pagetable, addr_page + unmapped_bytes, 0);
-    if (pte == 0)
-    {
-      return -1;
-    }
-    if (((*pte & PTE_V) == 0) || ((*pte & PTE_U) == 0) || ((*pte & PTE_S) == 0))
-    {
-      // error handling
-      return -1;
-    }
-    uvmunmap(p->pagetable, addr_page + unmapped_bytes, 1, 1);
-  }
+  uint64 addr_offset = addr - addr_page;
+  uint64 npages = (PGROUNDUP(size) / PGSIZE);
 
-  p->sz -= unmapped_bytes;
-  return 0;
+  uvmunmap(p->pagetable, addr_page, npages, 1);
+  p->sz -= npages * PGSIZE;
+  return addr - addr_offset;
 }
 
 struct proc *find_proc(uint64 pid)
