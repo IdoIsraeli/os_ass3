@@ -744,6 +744,18 @@ uint64 map_shared_pages(struct proc *src_proc, struct proc *dst_proc, uint64 src
   dst_proc->sz += mapped_bytes;
   return dst_va + src_va_offset;
 }
+// unmap the shared memory from the destination process
+// notice that the function uvmunmap is getting as an argument the number of pages to unmap, unlike mappages that gets the size of the memory to map, take that into consideration return 0 on success, -1 on failure
+uint64 unmap_shared_pages(struct proc *p, uint64 addr, uint64 size)
+{
+  uint64 addr_page = PGROUNDDOWN(addr);
+  uint64 addr_offset = addr - addr_page;
+  uint64 npages = (PGROUNDUP(size) / PGSIZE);
+
+  uvmunmap(p->pagetable, addr_page, npages, 1);
+  p->sz -= npages * PGSIZE;
+  return addr - addr_offset;
+}
 
 struct proc *find_proc(uint64 pid)
 {
