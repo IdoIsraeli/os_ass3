@@ -101,6 +101,7 @@ extern uint64 sys_crypto_op(void);
 extern uint64 sys_take_shared_memory_request(void);
 extern uint64 sys_remove_shared_memory_request(void);
 extern uint64 sys_map_shared_pages(void);
+extern uint64 sys_unmap_shared_pages(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -130,6 +131,7 @@ static uint64 (*syscalls[])(void) = {
     [SYS_take_shared_memory_request] sys_take_shared_memory_request,
     [SYS_remove_shared_memory_request] sys_remove_shared_memory_request,
     [SYS_map_shared_pages] sys_map_shared_pages,
+    [SYS_unmap_shared_pages] sys_unmap_shared_pages,
 };
 
 void syscall(void)
