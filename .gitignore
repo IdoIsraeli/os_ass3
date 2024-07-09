@@ -1,3 +1,7 @@
+*.asm
+*.sym
+*.S
+
 # Prerequisites
 *.d
 
