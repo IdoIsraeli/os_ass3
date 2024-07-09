@@ -104,14 +104,32 @@ uint64 sys_map_shared_pages(void)
   argaddr(2, &src_va);
   argaddr(3, &size);
 
-  struct proc *src_proc = find_proc(src_pid);
-  struct proc *dst_proc = find_proc(dst_pid);
+  struct proc *src_proc;
+  struct proc *dst_proc;
+
+  if (src_pid == myproc()->pid)
+  {
+    src_proc = myproc();
+  }
+  else
+  {
+    src_proc = find_proc(src_pid);
+  }
+  printf("found source proc pid %d\n", src_proc->pid);
+  if (dst_pid == myproc()->pid)
+  {
+    dst_proc = myproc();
+  }
+  else
+  {
+    dst_proc = find_proc(dst_pid);
+  }
+  printf("found dest proc pid %d\n", dst_proc->pid);
 
   if (src_proc == 0 || dst_proc == 0)
   {
     return -1;
   }
-
   uint64 dst_va = map_shared_pages(src_proc, dst_proc, src_va, size);
 
   if (dst_va == 0)
