@@ -168,7 +168,10 @@ freeproc(struct proc *p)
     kfree((void *)p->trapframe);
   p->trapframe = 0;
   if (p->pagetable)
+  {
+    unmap_shared_pages(p, (uint64)(p->pagetable), PGSIZE);
     proc_freepagetable(p->pagetable, p->sz);
+  }
   p->pagetable = 0;
   p->sz = 0;
   p->pid = 0;
@@ -754,15 +757,17 @@ uint64 unmap_shared_pages(struct proc *p, uint64 addr, uint64 size)
   for (unmapped_bytes = 0; unmapped_bytes < PGROUNDUP(size); unmapped_bytes += PGSIZE)
   {
     pte = walk(p->pagetable, addr_page + unmapped_bytes, 0);
-    if (pte == 0)
-    {
-      return -1;
-    }
+    // if (pte == 0)
+    // {
+    //   printf("walk failed inside of unmap_shared_pages\n");
+    //   return -1;
+    // }
     if (((*pte & PTE_V) == 0) || ((*pte & PTE_U) == 0) || ((*pte & PTE_S) == 0))
     {
       // error handling
       return -1;
     }
+    *pte = *pte & ~PTE_V;
     uvmunmap(p->pagetable, addr_page + unmapped_bytes, 1, 1);
   }
 
@@ -775,13 +780,16 @@ struct proc *find_proc(uint64 pid)
   struct proc *p;
   for (p = proc; p < &proc[NPROC]; p++)
   {
+    printf("try to acquire\n");
     acquire(&p->lock);
+    printf("acquired! pid %d\n", p->pid);
     if (p->pid == pid)
     {
       release(&p->lock);
       return p;
     }
     release(&p->lock);
+    printf("released!\n");
   }
   return 0;
 }
