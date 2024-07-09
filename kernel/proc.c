@@ -778,6 +778,7 @@ struct proc *find_proc(uint64 pid)
     acquire(&p->lock);
     if (p->pid == pid)
     {
+      release(&p->lock);
       return p;
     }
     release(&p->lock);
