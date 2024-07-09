@@ -1,6 +1,5 @@
 // #include <stdint.h> // tried including because of uint64 errors
 typedef unsigned long uint64;
-
 struct stat;
 struct crypto_op;
 struct proc;
@@ -30,8 +29,8 @@ int uptime(void);
 int crypto_op(struct crypto_op *, int);
 int take_shared_memory_request(void **, uint64 *);
 int remove_shared_memory_request(void *, uint64);
-int map_shared_pages(struct proc *, struct proc *, uint64, uint64); // added struct proc * and struct proc * instead of int and int
-int unmap_shared_pages(struct proc *, uint64, uint64);              // maybe need to change int to struct proc* ?
+int map_shared_pages(int, int, uint64, uint64); // added struct proc * and struct proc * instead of int and int
+int unmap_shared_pages(int, uint64, uint64);    // maybe need to change int to struct proc* ?
 
 // ulib.c
 int stat(const char *, struct stat *);

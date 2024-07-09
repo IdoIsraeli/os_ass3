@@ -94,15 +94,18 @@ sys_uptime(void)
 
 uint64 sys_map_shared_pages(void)
 {
-  struct proc *src_proc;
-  struct proc *dst_proc;
+  uint64 src_pid;
+  uint64 dst_pid;
   uint64 src_va;
   uint64 size;
 
-  argaddr(0, &src_proc);
-  argaddr(1, &dst_proc);
+  argaddr(0, &src_pid);
+  argaddr(1, &dst_pid);
   argaddr(2, &src_va);
   argaddr(3, &size);
+
+  struct proc *src_proc = find_proc(src_pid);
+  struct proc *dst_proc = find_proc(dst_pid);
 
   if (src_proc == 0 || dst_proc == 0)
   {
@@ -121,13 +124,15 @@ uint64 sys_map_shared_pages(void)
 
 uint64 sys_unmap_shared_pages(void)
 {
-  struct proc *proc;
+  uint64 pid;
   uint64 addr;
   uint64 size;
 
-  argaddr(0, &proc);
+  argaddr(0, &pid);
   argaddr(1, &addr);
   argaddr(2, &size);
+
+  struct proc *proc = find_proc(pid);
 
   if (proc == 0)
   {

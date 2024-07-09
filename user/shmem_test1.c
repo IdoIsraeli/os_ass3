@@ -11,14 +11,10 @@ int main()
     int pid = fork();
     if (pid == 0)
     {
-        struct proc *parent_proc = find_proc(parent_pid);
-        struct proc *child_proc = find_proc(getpid());
-        if (parent_proc == 0 || child_proc == 0)
-        {
-            printf("Process not found\n");
-            exit(1);
-        }
-        uint64 child_va = map_shared_pages(parent_proc, child_proc, (uint64)shared_mem, PGSIZE);
+        // struct proc *parent_proc = find_proc(parent_pid);
+        // struct proc *child_proc = find_proc(getpid());
+
+        uint64 child_va = map_shared_pages(parent_pid, getpid(), (uint64)shared_mem, PGSIZE);
         printf("%s\n", (char *)child_va);
         exit(0);
     }
