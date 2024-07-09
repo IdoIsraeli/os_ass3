@@ -1,43 +1,31 @@
 #include "kernel/types.h"
 #include "kernel/stat.h"
 #include "user/user.h"
+#include "kernel/riscv.h"
 
-int main(int argc, char *argv[])
+int main()
 {
-    int src_pid = getpid();
-
-    char *shared_mem = sbrk(4096);     // Allocate shared memory
-    strcpy(shared_mem, "Hello child"); // Write to shared memory
-
-    int dest_pid = fork();
-    if (dest_pid < 0)
+    char *shared_mem = malloc(PGSIZE);
+    strcpy(shared_mem, "Hello child");
+    int parent_pid = getpid();
+    int pid = fork();
+    if (pid == 0)
     {
-        // Fork failed
-        printf("Fork failed\n");
-        exit(1);
-    }
-    else if (dest_pid == 0)
-    {
-        // Step 4: Child process
-
-        // Step 1: Initialize shared memory
-        int dest_va = map_shared_pages(src_pid, dest_pid, shared_mem, 4096); // Assume this function exists and returns a pointer to shared memory
-        if (dest_va == -1)
+        struct proc *parent_proc = find_proc(parent_pid);
+        struct proc *child_proc = find_proc(getpid());
+        if (parent_proc == 0 || child_proc == 0)
         {
-            printf("Failed to map shared pages\n");
+            printf("Process not found\n");
             exit(1);
         }
-        printf("%s\n", dest_va); // Print the string from shared memory
-        exit(0);                 // Exit child process
+        uint64 child_va = map_shared_pages(parent_proc, child_proc, (uint64)shared_mem, PGSIZE);
+        printf("%s\n", (char *)child_va);
+        exit(0);
     }
-    else
+    else if (pid > 0)
     {
-        // Step 3: Parent process
-        wait(0); // Wait for child to finish
+        wait(0);
+        free(shared_mem);
     }
-
-    // Step 5: Cleanup, if necessary
-    // If map_shared_pages requires manual cleanup, do it here
-
-    exit(0);
+    return 0;
 }
