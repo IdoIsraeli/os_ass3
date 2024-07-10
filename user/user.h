@@ -1,8 +1,8 @@
-// #include <stdint.h> // tried including because of uint64 errors
 typedef unsigned long uint64;
+typedef unsigned int uint;
+
 struct stat;
 struct crypto_op;
-struct proc;
 
 // system calls
 int fork(void);

@@ -115,7 +115,6 @@ uint64 sys_map_shared_pages(void)
   {
     src_proc = find_proc(src_pid);
   }
-  printf("found source proc pid %d\n", src_proc->pid);
   if (dst_pid == myproc()->pid)
   {
     dst_proc = myproc();
@@ -124,7 +123,6 @@ uint64 sys_map_shared_pages(void)
   {
     dst_proc = find_proc(dst_pid);
   }
-  printf("found dest proc pid %d\n", dst_proc->pid);
 
   if (src_proc == 0 || dst_proc == 0)
   {
@@ -136,7 +134,6 @@ uint64 sys_map_shared_pages(void)
   {
     return -1;
   }
-
   return dst_va;
 }
 

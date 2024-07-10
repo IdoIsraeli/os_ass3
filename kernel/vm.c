@@ -172,6 +172,7 @@ void uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
 {
   uint64 a;
   pte_t *pte;
+  int counter = 0;
 
   if ((va % PGSIZE) != 0)
     panic("uvmunmap: not aligned");
@@ -190,6 +191,7 @@ void uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
       kfree((void *)pa);
     }
     *pte = 0;
+    counter++;
   }
 }
 
@@ -299,7 +301,9 @@ void freewalk(pagetable_t pagetable)
 void uvmfree(pagetable_t pagetable, uint64 sz)
 {
   if (sz > 0)
+  {
     uvmunmap(pagetable, 0, PGROUNDUP(sz) / PGSIZE, 1);
+  }
   freewalk(pagetable);
 }
 

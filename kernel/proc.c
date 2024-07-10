@@ -169,7 +169,6 @@ freeproc(struct proc *p)
   p->trapframe = 0;
   if (p->pagetable)
   {
-    unmap_shared_pages(p, (uint64)(p->pagetable), PGSIZE);
     proc_freepagetable(p->pagetable, p->sz);
   }
   p->pagetable = 0;
@@ -715,38 +714,55 @@ uint64 map_shared_pages(struct proc *src_proc, struct proc *dst_proc, uint64 src
   uint64 src_va_page = PGROUNDDOWN(src_va);
   uint64 src_va_offset = src_va - src_va_page;
   uint64 dst_va = 0;
-  pte_t *pte;
+  pte_t *pte_source;
   uint64 mapped_bytes;
+
+  // virtual address of end of dest proc, at the beginning
+  uint64 original_va_eod = PGROUNDUP(dst_proc->sz);
+
   for (mapped_bytes = 0; mapped_bytes < PGROUNDUP(size); mapped_bytes += PGSIZE)
   {
     // get the pte for the BEGINNING of each page of src_va
-    pte = walk(src_proc->pagetable, src_va_page + mapped_bytes, 0);
-    if (pte == 0)
+    pte_source = walk(src_proc->pagetable, src_va_page + mapped_bytes, 0);
+    if (pte_source == 0)
     {
       // maybe add unmalloc here
       return 0;
     }
-    if (((*pte & PTE_V) == 0) || ((*pte & PTE_U) == 0))
+    if (((*pte_source & PTE_V) == 0) || ((*pte_source & PTE_U) == 0))
     {
       // maybe add unmalloc here
       return 0;
     }
+    uint64 pa_source = PTE2PA(*pte_source);
+
+    // allocate a new pagetable for destination process
+    dst_va = PGROUNDUP(dst_proc->sz);
+    if (walk(dst_proc->pagetable, dst_va, 1) == 0)
+    {
+      return 0;
+    }
+    dst_proc->sz += PGSIZE;
+
     // allocate a page for dst_va
-    dst_va = uvmalloc(dst_proc->pagetable, dst_proc->sz, dst_proc->sz + PGSIZE, PTE_FLAGS(*pte) | PTE_S);
-    if (dst_va == 0)
-    {
-      // maybe add unmalloc here
-      return 0;
-    }
-    if (mappages(dst_proc->pagetable, dst_va, PGSIZE, PTE2PA(*pte), PTE_FLAGS(*pte) | PTE_S) != 0)
+    // dst_va = uvmalloc(dst_proc->pagetable, dst_proc->sz, dst_proc->sz + PGSIZE, PTE_FLAGS(*pte) | PTE_S);
+
+    // if (dst_va == 0)
+    // {
+    //   // maybe add unmalloc here
+    //   return 0;
+    // }
+
+    if (mappages(dst_proc->pagetable, dst_va, PGSIZE, pa_source, PTE_FLAGS(*pte_source) | PTE_S) != 0)
     {
       // maybe add unmalloc here
       return 0;
     }
   }
-  dst_proc->sz += mapped_bytes;
-  return dst_va + src_va_offset;
+
+  return original_va_eod + src_va_offset;
 }
+
 // unmap the shared memory from the destination process
 // notice that the function uvmunmap is getting as an argument the number of pages to unmap, unlike mappages that gets the size of the memory to map, take that into consideration return 0 on success, -1 on failure
 uint64 unmap_shared_pages(struct proc *p, uint64 addr, uint64 size)
@@ -757,6 +773,8 @@ uint64 unmap_shared_pages(struct proc *p, uint64 addr, uint64 size)
   for (unmapped_bytes = 0; unmapped_bytes < PGROUNDUP(size); unmapped_bytes += PGSIZE)
   {
     pte = walk(p->pagetable, addr_page + unmapped_bytes, 0);
+    printf("walk succeeded inside of unmap_shared_pages\n");
+    printf("%p\n", pte);
     // if (pte == 0)
     // {
     //   printf("walk failed inside of unmap_shared_pages\n");
@@ -765,9 +783,15 @@ uint64 unmap_shared_pages(struct proc *p, uint64 addr, uint64 size)
     if (((*pte & PTE_V) == 0) || ((*pte & PTE_U) == 0) || ((*pte & PTE_S) == 0))
     {
       // error handling
+      printf("flags check failed inside of unmap_shared_pages\n");
       return -1;
     }
-    *pte = *pte & ~PTE_V;
+    // printf("trying to remove valid flag\n");
+    // *pte = *pte & ~PTE_V;
+    // if ((*pte & PTE_V) == 0)
+    // {
+    // printf("valid flag is down\n");
+    // }
     uvmunmap(p->pagetable, addr_page + unmapped_bytes, 1, 1);
   }
 
@@ -780,16 +804,13 @@ struct proc *find_proc(uint64 pid)
   struct proc *p;
   for (p = proc; p < &proc[NPROC]; p++)
   {
-    printf("try to acquire\n");
     acquire(&p->lock);
-    printf("acquired! pid %d\n", p->pid);
     if (p->pid == pid)
     {
       release(&p->lock);
       return p;
     }
     release(&p->lock);
-    printf("released!\n");
   }
   return 0;
 }
