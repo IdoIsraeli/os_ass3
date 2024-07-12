@@ -31,6 +31,7 @@ int take_shared_memory_request(void **, uint64 *);
 int remove_shared_memory_request(void *, uint64);
 int map_shared_pages(int, int, uint64, uint64); // added struct proc * and struct proc * instead of int and int
 int unmap_shared_pages(int, uint64, uint64);    // maybe need to change int to struct proc* ?
+int memsize(void);
 
 // ulib.c
 int stat(const char *, struct stat *);

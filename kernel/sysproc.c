@@ -156,3 +156,9 @@ uint64 sys_unmap_shared_pages(void)
 
   return unmap_shared_pages(proc, addr, size);
 }
+
+uint64
+sys_memsize(void)
+{
+  return myproc()->sz;
+}
