@@ -29,7 +29,6 @@ int main(void)
   }
   void *addr;
   uint64 dst_size;
-  struct crypto_op *op = malloc(sizeof(struct crypto_op) + 4096); // probaly need to change this.
 
   while (1)
   {
@@ -38,6 +37,8 @@ int main(void)
       // failed to take shared memory request
       continue;
     }
+    struct crypto_op *op = (struct crypto_op *)addr;
+
     memcpy(op, addr, dst_size);
     if (op->state == CRYPTO_OP_STATE_INIT && (op->type == CRYPTO_OP_TYPE_DECRYPT || op->type == CRYPTO_OP_TYPE_ENCRYPT))
     {
