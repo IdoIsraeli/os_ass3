@@ -726,12 +726,10 @@ uint64 map_shared_pages(struct proc *src_proc, struct proc *dst_proc, uint64 src
     pte_source = walk(src_proc->pagetable, src_va_page + mapped_bytes, 0);
     if (pte_source == 0)
     {
-      // maybe add unmalloc here
       return 0;
     }
     if (((*pte_source & PTE_V) == 0) || ((*pte_source & PTE_U) == 0))
     {
-      // maybe add unmalloc here
       return 0;
     }
     uint64 pa_source = PTE2PA(*pte_source);
@@ -743,19 +741,8 @@ uint64 map_shared_pages(struct proc *src_proc, struct proc *dst_proc, uint64 src
       return 0;
     }
     dst_proc->sz += PGSIZE;
-
-    // allocate a page for dst_va
-    // dst_va = uvmalloc(dst_proc->pagetable, dst_proc->sz, dst_proc->sz + PGSIZE, PTE_FLAGS(*pte) | PTE_S);
-
-    // if (dst_va == 0)
-    // {
-    //   // maybe add unmalloc here
-    //   return 0;
-    // }
-
     if (mappages(dst_proc->pagetable, dst_va, PGSIZE, pa_source, PTE_FLAGS(*pte_source) | PTE_S) != 0)
     {
-      // maybe add unmalloc here
       return 0;
     }
   }
@@ -773,25 +760,11 @@ uint64 unmap_shared_pages(struct proc *p, uint64 addr, uint64 size)
   for (unmapped_bytes = 0; unmapped_bytes < PGROUNDUP(size); unmapped_bytes += PGSIZE)
   {
     pte = walk(p->pagetable, addr_page + unmapped_bytes, 0);
-    printf("walk succeeded inside of unmap_shared_pages\n");
-    printf("%p\n", pte);
-    // if (pte == 0)
-    // {
-    //   printf("walk failed inside of unmap_shared_pages\n");
-    //   return -1;
-    // }
     if (((*pte & PTE_V) == 0) || ((*pte & PTE_U) == 0) || ((*pte & PTE_S) == 0))
     {
       // error handling
-      printf("flags check failed inside of unmap_shared_pages\n");
       return -1;
     }
-    // printf("trying to remove valid flag\n");
-    // *pte = *pte & ~PTE_V;
-    // if ((*pte & PTE_V) == 0)
-    // {
-    // printf("valid flag is down\n");
-    // }
     uvmunmap(p->pagetable, addr_page + unmapped_bytes, 1, 1);
   }
 

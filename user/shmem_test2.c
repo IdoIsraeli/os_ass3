@@ -6,13 +6,12 @@
 int main()
 {
     printf("Beginning of test\n");
-    char *shared_mem = malloc(PGSIZE); // Allocate shared memory
+    char *shared_mem = malloc(PGSIZE);
     int parent_pid = getpid();
     int pid = fork();
 
     if (pid == 0)
-    { // Child process
-        // printf("Child PID: %d, Parent PID: %d\n", getpid(), parent_pid);
+    {
         printf("Size of child process before mapping: %d\n", memsize());
 
         // Create shared memory mapping
@@ -21,23 +20,21 @@ int main()
 
         strcpy((char *)child_va, "Hello daddy"); // Write to shared memory
 
-        // Unmap shared memory
         unmap_shared_pages(getpid(), child_va, PGSIZE);
-        printf("After unmap_shared_pages\n");
-        printf("Size of child process: %d\n", memsize());
+        printf("After unmap_shared_pages the Size of child process: %d\n", memsize());
 
-        // Allocate new memory to show malloc works
-        // char *child_mem = malloc(PGSIZE);
-        // printf("After malloc\n");
-        // printf("Size of child process: %d\n", memsize());
+        char *child_mem = malloc(PGSIZE);
+
+        child_mem[0] = 'a'; // use child_mem arbiterally to avoid compiler warning
+        printf("After malloc, the Size of child process: %d\n", memsize());
 
         exit(0);
     }
     else
-    {                                                      // Parent process
-        wait(0);                                           // Wait for child to complete
-        printf("Shared memory content: %s\n", shared_mem); // Print shared memory content
-        free(shared_mem);                                  // Clean up
+    {
+        wait(0);
+        printf("%s\n", shared_mem);
+        free(shared_mem);
     }
 
     return 0;
