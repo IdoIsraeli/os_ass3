@@ -30,6 +30,7 @@ int main(void)
   void *addr;
   uint64 dst_size;
   struct crypto_op *op = malloc(sizeof(struct crypto_op) + 4096); // probaly need to change this.
+
   while (1)
   {
     if (take_shared_memory_request(&addr, &dst_size) != 0)
@@ -47,10 +48,12 @@ int main(void)
       }
       asm volatile("fence rw,rw" : : : "memory");
       op->state = CRYPTO_OP_STATE_DONE;
+
       int remove_res = remove_shared_memory_request(addr, dst_size);
       if (remove_res != 0)
       {
         printf("crypto_srv: failed to remove shared memory request\n");
+        asm volatile("fence rw,rw" : : : "memory");
         op->state = CRYPTO_OP_STATE_ERROR;
       }
     }
